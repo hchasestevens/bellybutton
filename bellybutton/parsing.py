@@ -5,6 +5,7 @@ from collections import namedtuple
 
 import yaml
 from lxml.etree import XPath
+from astpath.search import find_in_ast, file_contents_to_xml_ast
 
 from bellybutton.exceptions import InvalidNode
 
@@ -65,7 +66,7 @@ def settings(loader, node):
         for field in Settings._fields:
             if field not in values:
                 raise InvalidNode(
-                    "!settings node missing required field {}.".format(field)
+                    "!settings node missing required field `{}`.".format(field)
                 )
         raise
 
@@ -85,23 +86,34 @@ def parse_rule(rule_name, rule_values, default_settings=None):
     if rule_description is None:
         raise InvalidNode("No rule description provided.")
 
-    rule_settings = rule_values.get('settings', default_settings)
-    if rule_settings is None:
-        raise InvalidNode("No rule settings or default settings specified.")
-
     rule_expr = rule_values.get('expr')
     if rule_expr is None:
         raise InvalidNode("No rule expression provided.")
+    matches = (
+        lambda x: find_in_ast(
+            file_contents_to_xml_ast(x),
+            rule_expr.path,
+            return_lines=False
+        )
+        if isinstance(rule_expr, XPath)
+        else x.match
+    )
 
     rule_example = rule_values.get('example')
     if rule_example is not None:
         validate_syntax(rule_example)
-        # todo - ensure expr matches example
+        if not matches(rule_example):
+            raise InvalidNode("Rule `example` clause is not matched by rule.")
 
     rule_instead = rule_values.get('instead')
     if rule_instead is not None:
         validate_syntax(rule_instead)
-        # todo - ensure expr matches example
+        if matches(rule_instead):
+            raise InvalidNode("Rule `instead` clause is matched by rule.")
+
+    rule_settings = rule_values.get('settings', default_settings)
+    if rule_settings is None:
+        raise InvalidNode("No rule settings or default settings specified.")
 
     return Rule(
         name=rule_name,
