@@ -77,8 +77,21 @@ def init(project_directory='.', force=False):
 
 
 @cli_command
-def lint(level='all', project_directory='.'):
+def lint(level='all', project_directory='.', verbose=False):
     """Lint project."""
+    config_path = os.path.join(project_directory, '.bellybutton.yml')
+    try:
+        rules = load_config(config_path)
+    except IOError:
+        message = "ERROR: Configuration file path `{}` does not exist."
+        print(message.format(config_path))
+        return 1
+    except InvalidNode as e:
+        message = "ERROR: When parsing {}: {!r}"
+        print(message.format(config_path, e))
+        return 1
+
+
     return 0
 
 
