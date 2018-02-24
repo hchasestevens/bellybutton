@@ -16,6 +16,11 @@ setup(
     ],
     tests_require=['pytest>=3.1.2', 'future>=0.16.0'],
     extras_require={'dev': ['pytest>=3.1.2', 'future>=0.16.0']},
+    entry_points={
+        'console_scripts': [
+            'bellybutton = bellybutton.cli:main',
+        ],
+    },
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
