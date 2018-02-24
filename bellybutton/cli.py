@@ -89,7 +89,7 @@ def init(project_directory='.', force=False):
         return 1
 
     test_directories = [
-        os.path.join(project_directory, d)
+        d
         for d in os.listdir(project_directory)
         if os.path.isdir(os.path.join(project_directory, d))
         and d.startswith('test')
