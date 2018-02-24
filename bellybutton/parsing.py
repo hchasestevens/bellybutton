@@ -54,7 +54,7 @@ def chain(loader, node):
     pass  # todo: chain constructors (viz. xpath then regex)
 
 
-Settings = namedtuple('Settings', 'included excluded')
+Settings = namedtuple('Settings', 'included excluded allow_ignore')
 
 
 @constructor
