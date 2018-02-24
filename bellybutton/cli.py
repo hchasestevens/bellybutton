@@ -16,8 +16,7 @@ PARSER = argparse.ArgumentParser()
 SUBPARSERS = PARSER.add_subparsers()
 
 
-INIT_TEMPLATE = '''
-settings:
+INIT_TEMPLATE = '''settings:
   all_files: &all_files !settings
     included:
       - "*"
@@ -46,8 +45,6 @@ TESTS_SETTINGS_TEMPLATE = """
     excluded:
       {test_dirs}
 """
-
-TEST_DIR_TEMPLATE = "- tests/*"
 
 
 def cli_command(fn):
@@ -100,7 +97,8 @@ def init(project_directory='.', force=False):
     if test_directories:
         test_settings = TESTS_SETTINGS_TEMPLATE.format(
             test_dirs='\n      '.join(
-                test_directories
+                "- {}".format(os.path.join(test_dir, '*'))
+                for test_dir in test_directories
             )
         )
     else:
