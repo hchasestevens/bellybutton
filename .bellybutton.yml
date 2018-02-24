@@ -1,0 +1,29 @@
+settings:
+  all_files: &all_files !settings
+    included:
+      - "*"
+    excluded: []
+    allow_ignore: yes
+
+  tests_only: &tests_only !settings
+    included:
+      - tests/*
+    excluded: []
+    allow_ignore: yes
+
+  excluding_tests: &excluding_tests !settings
+    included:
+      - "*"
+    excluded:
+      - tests/*
+    allow_ignore: yes
+
+default_settings: *excluding_tests
+
+rules:
+  ExampleRule:
+    description: "Empty module."
+    expr: /Module/body[not(./*)]
+    example: ""
+    instead: |
+      """This module has a docstring."""

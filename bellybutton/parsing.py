@@ -125,9 +125,9 @@ def parse_rule(rule_name, rule_values, default_settings=None):
     )
 
 
-def load_config(fname):
+def load_config(fileobj):
     """Load bellybutton config file, returning a list of rules."""
-    loaded = yaml.load(fname)
+    loaded = yaml.load(fileobj)
     default_settings = loaded.get('default_settings')
     return [
         parse_rule(rule_name, rule_values, default_settings)

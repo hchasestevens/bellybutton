@@ -21,6 +21,14 @@ PARSER = argparse.ArgumentParser()
 SUBPARSERS = PARSER.add_subparsers()
 
 
+def success(msg):
+    return "\033[92m{}\033[0m".format(msg)
+
+
+def error(msg):
+    return "\033[91m{}\033[0m".format(msg)
+
+
 def cli_command(fn):
     """Register function as subcommand."""
     command = SUBPARSERS.add_parser(fn.__name__, description=fn.__doc__)
@@ -62,7 +70,7 @@ def init(project_directory='.', force=False):
     config_path = os.path.join(project_directory, '.bellybutton.yml')
     if os.path.exists(config_path) and not force:
         message = 'ERROR: Path `{}` already initialized (use --force to ignore).'
-        print(message.format(config_path))
+        print(error(message.format(config_path)))
         return 1
 
     config = generate_config(
@@ -81,17 +89,20 @@ def lint(level='all', project_directory='.', verbose=False):
     """Lint project."""
     config_path = os.path.join(project_directory, '.bellybutton.yml')
     try:
-        rules = load_config(config_path)
+        with open(config_path, 'r') as f:
+            rules = load_config(f)
     except IOError:
         message = "ERROR: Configuration file path `{}` does not exist."
-        print(message.format(config_path))
+        print(error(message.format(config_path)))
         return 1
     except InvalidNode as e:
         message = "ERROR: When parsing {}: {!r}"
-        print(message.format(config_path, e))
+        print(error(message.format(config_path, e)))
         return 1
-
-
+    print(success("Linting succeeded ({} rule{}).".format(
+        len(rules),
+        '' if len(rules) == 1 else 's'
+    )))
     return 0
 
 
