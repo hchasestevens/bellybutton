@@ -129,8 +129,10 @@ def load_config(fileobj):
     """Load bellybutton config file, returning a list of rules."""
     loaded = yaml.load(fileobj)
     default_settings = loaded.get('default_settings')
-    return [
+    rules = [
         parse_rule(rule_name, rule_values, default_settings)
         for rule_name, rule_values in
         loaded.get('rules', {}).items()
     ]
+    print(rules)
+    return rules

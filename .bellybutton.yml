@@ -18,12 +18,26 @@ settings:
       - tests/*
     allow_ignore: yes
 
+  excluding_cli: &excluding_cli !settings
+    <<: *excluding_tests
+    excluded:
+      - tests/*
+      - bellybutton/cli.py
+
 default_settings: *excluding_tests
 
 rules:
-  ExampleRule:
-    description: "Empty module."
-    expr: /Module/body[not(./*)]
-    example: ""
-    instead: |
-      """This module has a docstring."""
+  IllicitPrint:
+    description: Use of print outside the CLI module is disallowed.
+    expr: //Print | //Call[func/Name[@id='print' or @id='pprint']]
+    example: |
+      print(x)
+    settings: *excluding_cli
+
+  IllicitOpen:
+    description: Performing I/O outside the CLI module is disallowed.
+    expr: //Call[func/Name/@id='open']
+    example: |
+      with open('x') as f:
+        pass
+    settings: *excluding_cli

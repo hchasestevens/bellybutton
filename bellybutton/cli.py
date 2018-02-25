@@ -84,6 +84,23 @@ def init(project_directory='.', force=False):
     return 0
 
 
+def walk_python_files(root_dir):
+    """
+    Walk the specified directory, yielding (path, content) pairs for python
+    source files.
+    """
+    filepaths = (
+        os.path.join(root, fname)
+        for root, _, fnames in os.walk(root_dir)
+        for fname in fnames
+        if os.path.splitext(fname)[-1] == '.py'
+    )
+    for filepath in filepaths:
+        with open(filepath, 'r') as f:
+            contents = f.read()
+        yield filepath, contents
+
+
 @cli_command
 def lint(level='all', project_directory='.', verbose=False):
     """Lint project."""
@@ -99,6 +116,14 @@ def lint(level='all', project_directory='.', verbose=False):
         message = "ERROR: When parsing {}: {!r}"
         print(error(message.format(config_path, e)))
         return 1
+
+    files = (
+        os.path.join(root, fname)
+        for root, _, fnames in os.walk(project_directory)
+        for fname in fnames
+        if os.path.splitext(fname)[-1] == '.py'
+    )
+
     print(success("Linting succeeded ({} rule{}).".format(
         len(rules),
         '' if len(rules) == 1 else 's'
