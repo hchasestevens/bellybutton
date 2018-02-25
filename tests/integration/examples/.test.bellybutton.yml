@@ -3,12 +3,14 @@ settings:
     included:
       - "*"
     excluded: []
+    allow_ignore: yes
 
   tests_only: &tests_only !settings
     included:
       - tests/*
       - test/*
     excluded: []
+    allow_ignore: yes
 
   excluding_tests: &excluding_tests !settings
     included:
@@ -16,6 +18,7 @@ settings:
     excluded:
       - tests/*
       - test/*
+    allow_ignore: yes
 
 default_settings: *excluding_tests
 

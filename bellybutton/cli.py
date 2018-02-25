@@ -5,46 +5,30 @@ from __future__ import print_function
 import os
 import sys
 import argparse
+from textwrap import dedent
+
+from bellybutton.exceptions import InvalidNode
+from bellybutton.linting import lint_file
+from bellybutton.parsing import load_config
 
 try:
     from itertools import zip_longest
 except ImportError:
     from itertools import izip_longest as zip_longest
 
+from bellybutton.initialization import generate_config
+
 
 PARSER = argparse.ArgumentParser()
 SUBPARSERS = PARSER.add_subparsers()
 
 
-INIT_TEMPLATE = '''settings:
-  all_files: &all_files !settings
-    included:
-      - "*"
-    excluded: []
-{test_block}
-default_settings: *{default_settings}
+def success(msg):
+    return "\033[92m{}\033[0m".format(msg)
 
-rules:
-  ExampleRule:
-    description: "Empty module."
-    expr: /Module/body[not(./*)]
-    example: ""
-    instead: |
-      """This module has a docstring."""
-'''
 
-TESTS_SETTINGS_TEMPLATE = """
-  tests_only: &tests_only !settings
-    included:
-      {test_dirs}
-    excluded: []
-
-  excluding_tests: &excluding_tests !settings
-    included:
-      - "*"
-    excluded:
-      {test_dirs}
-"""
+def error(msg):
+    return "\033[91m{}\033[0m".format(msg)
 
 
 def cli_command(fn):
@@ -63,17 +47,19 @@ def cli_command(fn):
             command.add_argument(argument_name)
             continue
 
+        args = ['--{}'.format(argument_name)]
         kwargs = dict(
             default=default_value,
             required=False,
         )
         if type(default_value) is bool:
             kwargs['action'] = 'store_{!r}'.format(not default_value).lower()
+            args.append('-{}'.format(argument_name[0]))
         else:
             kwargs['type'] = type(default_value)
 
         command.add_argument(
-            '--{}'.format(argument_name),
+            *args,
             **kwargs
         )
 
@@ -85,38 +71,100 @@ def init(project_directory='.', force=False):
     """Initialize bellybutton config for project."""
     config_path = os.path.join(project_directory, '.bellybutton.yml')
     if os.path.exists(config_path) and not force:
-        print('ERROR: Path `{}` already initialized (use --force to ignore).'.format(config_path))
+        message = 'ERROR: Path `{}` already initialized (use --force to ignore).'
+        print(error(message.format(config_path)))
         return 1
 
-    test_directories = [
-        d
-        for d in os.listdir(project_directory)
-        if os.path.isdir(os.path.join(project_directory, d))
-        and d.startswith('test')
-    ]
-    if test_directories:
-        test_settings = TESTS_SETTINGS_TEMPLATE.format(
-            test_dirs='\n      '.join(
-                "- {}".format(os.path.join(test_dir, '*'))
-                for test_dir in test_directories
-            )
-        )
-    else:
-        test_settings = ''
-
-    config = INIT_TEMPLATE.format(
-        test_block=test_settings,
-        default_settings='excluding_tests' if test_directories else 'all_files'
+    config = generate_config(
+        directory
+        for directory in os.listdir(project_directory)
+        if os.path.isdir(os.path.join(project_directory, directory))
+        and directory.startswith('test')
     )
     with open(config_path, 'w') as f:
         f.write(config)
     return 0
 
 
+def walk_python_files(root_dir):
+    """
+    Walk the specified directory, yielding (path, content) pairs for python
+    source files.
+    """
+    filepaths = (
+        os.path.join(root, fname)
+        for root, _, fnames in os.walk(root_dir)
+        for fname in fnames
+        if os.path.splitext(fname)[-1] == '.py'
+    )
+    for filepath in sorted(filepaths):
+        with open(filepath, 'r') as f:
+            contents = f.read()
+        yield filepath, contents
+
+
 @cli_command
-def lint(level='all', project_directory='.'):
+def lint(modified_only=False, project_directory='.', verbose=False):
     """Lint project."""
-    return 0
+    config_path = os.path.abspath(
+        os.path.join(project_directory, '.bellybutton.yml')
+    )
+    try:
+        with open(config_path, 'r') as f:
+            rules = load_config(f)
+    except IOError:
+        message = "ERROR: Configuration file path `{}` does not exist."
+        print(error(message.format(config_path)))
+        return 1
+    except InvalidNode as e:
+        message = "ERROR: When parsing {}: {!r}"
+        print(error(message.format(config_path, e)))
+        return 1
+
+    if verbose:
+        failure_message = dedent("""{path}:{lineno}\t{rule.name}
+        Description: {rule.description}
+        Example:
+        {rule.example}
+        Instead:
+        {rule.instead}
+        """)
+    else:
+        failure_message = "{path}:{lineno}\t{rule.name}: {rule.description}"
+
+    num_files = 0
+    failures = 0
+    files = walk_python_files(os.path.abspath(project_directory))
+    for filepath, file_contents in files:
+        relpath = os.path.relpath(filepath, project_directory)
+        linting_results = list(lint_file(filepath, file_contents, rules))
+        if not linting_results:
+            continue
+        num_files += 1
+        failure_results = (
+            result
+            for result in linting_results
+            if not result.succeeded
+        )
+        for failure in failure_results:
+            failures += 1
+            print(failure_message.format(
+                path=relpath,
+                lineno=failure.lineno,
+                rule=failure.rule,
+            ))
+
+    final_message = "Linting {} ({} rule{}, {} file{}, {} violation{}).".format(
+        'failed' if failures else 'succeeded',
+        len(rules),
+        '' if len(rules) == 1 else 's',
+        num_files,
+        '' if num_files == 1 else 's',
+        failures,
+        '' if failures == 1 else 's',
+    )
+    print((error if failures else success)(final_message))
+    return 1 if failures else 0
 
 
 def main():

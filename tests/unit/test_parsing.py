@@ -17,7 +17,7 @@ from bellybutton.parsing import Settings, parse_rule, Rule
     pytest.mark.xfail(('//[]', XPath), raises=XPathSyntaxError),
     ('!regex .*', re._pattern_type),
     pytest.mark.xfail(('!regex "*"', re._pattern_type), raises=re.error),
-    ('!settings {included: [], excluded: []}', Settings),
+    ('!settings {included: [], excluded: [], allow_ignore: yes}', Settings),
     pytest.mark.xfail(('!settings {}', Settings), raises=InvalidNode)
 ))
 def test_constructors(expression, expected_type):
@@ -35,7 +35,7 @@ def test_parse_rule():
             expr=expr,
             example="a = 1",
             instead="a = int('1')",
-            settings=Settings(included=[], excluded=[]),
+            settings=Settings(included=[], excluded=[], allow_ignore=True),
         )
     ) == Rule(
         name='',
@@ -43,7 +43,7 @@ def test_parse_rule():
         expr=expr,
         example="a = 1",
         instead="a = int('1')",
-        settings=Settings(included=[], excluded=[])
+        settings=Settings(included=[], excluded=[], allow_ignore=True)
     )
 
 

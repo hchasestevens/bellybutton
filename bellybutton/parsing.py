@@ -3,6 +3,7 @@ import ast
 import re
 from collections import namedtuple
 
+import os
 import yaml
 from lxml.etree import XPath
 from astpath.search import find_in_ast, file_contents_to_xml_ast
@@ -26,6 +27,18 @@ def constructor(tag=None, pattern=None):
     return decorator
 
 
+@constructor(pattern=r'\~\+[/\\].+')
+def glob(loader, node):
+    """Construct glob expressions."""
+    value = loader.construct_scalar(node)[len('~+/'):]
+    return os.path.join(
+        os.path.dirname(loader.name),
+        value
+    )
+
+
+# todo - all exprs return tuple(parsed_expr, contents -> {lines})?
+
 @constructor(pattern=r'/.+')
 def xpath(loader, node):
     """Construct XPath expressions."""
@@ -37,7 +50,7 @@ def xpath(loader, node):
 def regex(loader, node):
     """Construct regular expressions."""
     value = loader.construct_scalar(node)
-    return re.compile(value)
+    return re.compile(value, re.MULTILINE)
 
 
 @constructor
@@ -54,7 +67,7 @@ def chain(loader, node):
     pass  # todo: chain constructors (viz. xpath then regex)
 
 
-Settings = namedtuple('Settings', 'included excluded')
+Settings = namedtuple('Settings', 'included excluded allow_ignore')
 
 
 @constructor
@@ -114,6 +127,8 @@ def parse_rule(rule_name, rule_values, default_settings=None):
     rule_settings = rule_values.get('settings', default_settings)
     if rule_settings is None:
         raise InvalidNode("No rule settings or default settings specified.")
+    if not isinstance(rule_settings, Settings):
+        raise InvalidNode("Rule settings must be a !settings node.")
 
     return Rule(
         name=rule_name,
@@ -125,12 +140,13 @@ def parse_rule(rule_name, rule_values, default_settings=None):
     )
 
 
-def load_config(fname):
+def load_config(fileobj):
     """Load bellybutton config file, returning a list of rules."""
-    loaded = yaml.load(fname)
+    loaded = yaml.load(fileobj)
     default_settings = loaded.get('default_settings')
-    return [
+    rules = [
         parse_rule(rule_name, rule_values, default_settings)
         for rule_name, rule_values in
         loaded.get('rules', {}).items()
     ]
+    return rules
