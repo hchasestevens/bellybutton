@@ -10,7 +10,7 @@ Failure = namedtuple('Failure', 'rule filepath lineno')
 
 
 def get_ignored_lines(file_contents):
-    """Get lines to be ignored for linting."""
+    """Return set of line numbers to be ignored when linting."""
     it = iter(file_contents.splitlines(True))
     tokens = tokenize.generate_tokens(lambda: next(it))
     return frozenset(

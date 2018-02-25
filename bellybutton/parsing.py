@@ -3,6 +3,7 @@ import ast
 import re
 from collections import namedtuple
 
+import os
 import yaml
 from lxml.etree import XPath
 from astpath.search import find_in_ast, file_contents_to_xml_ast
@@ -24,6 +25,16 @@ def constructor(tag=None, pattern=None):
     if callable(tag):  # little convenience hack to avoid empty arg list
         return decorator(tag)
     return decorator
+
+
+@constructor(pattern=r'\~\+[/\\].+')
+def glob(loader, node):
+    """Construct glob expressions."""
+    value = loader.construct_scalar(node)[len('~+/'):]
+    return os.path.join(
+        os.path.dirname(loader.name),
+        value
+    )
 
 
 @constructor(pattern=r'/.+')

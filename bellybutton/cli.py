@@ -104,7 +104,9 @@ def walk_python_files(root_dir):
 @cli_command
 def lint(level='all', project_directory='.', verbose=False):
     """Lint project."""
-    config_path = os.path.join(project_directory, '.bellybutton.yml')
+    config_path = os.path.abspath(
+        os.path.join(project_directory, '.bellybutton.yml')
+    )
     try:
         with open(config_path, 'r') as f:
             rules = load_config(f)

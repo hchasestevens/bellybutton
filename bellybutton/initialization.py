@@ -6,7 +6,7 @@ import os
 INIT_TEMPLATE = '''settings:
   all_files: &all_files !settings
     included:
-      - "*"
+      - ~+/*
     excluded: []
     allow_ignore: yes
 {test_block}
@@ -30,7 +30,7 @@ TESTS_SETTINGS_TEMPLATE = """
 
   excluding_tests: &excluding_tests !settings
     included:
-      - "*"
+      - ~+/*
     excluded:
       {test_dirs}
     allow_ignore: yes
@@ -40,7 +40,7 @@ TESTS_SETTINGS_TEMPLATE = """
 def generate_config(test_directories):
     """Generate configuration, given test directories."""
     test_dirs_block = '\n      '.join(
-        "- {}".format(os.path.join(test_dir, '*'))
+        "- ~+/{}".format(os.path.join(test_dir, '*'))
         for test_dir in test_directories
     )
     if test_dirs_block:
