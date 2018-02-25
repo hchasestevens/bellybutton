@@ -5,8 +5,10 @@ from __future__ import print_function
 import os
 import sys
 import argparse
+from textwrap import dedent
 
 from bellybutton.exceptions import InvalidNode
+from bellybutton.linting import lint_file
 from bellybutton.parsing import load_config
 
 try:
@@ -95,14 +97,14 @@ def walk_python_files(root_dir):
         for fname in fnames
         if os.path.splitext(fname)[-1] == '.py'
     )
-    for filepath in filepaths:
+    for filepath in sorted(filepaths):
         with open(filepath, 'r') as f:
             contents = f.read()
         yield filepath, contents
 
 
 @cli_command
-def lint(level='all', project_directory='.', verbose=False):
+def lint(modified_only=False, project_directory='.', verbose=False):
     """Lint project."""
     config_path = os.path.abspath(
         os.path.join(project_directory, '.bellybutton.yml')
@@ -119,18 +121,50 @@ def lint(level='all', project_directory='.', verbose=False):
         print(error(message.format(config_path, e)))
         return 1
 
-    files = (
-        os.path.join(root, fname)
-        for root, _, fnames in os.walk(project_directory)
-        for fname in fnames
-        if os.path.splitext(fname)[-1] == '.py'
-    )
+    if verbose:
+        failure_message = dedent("""{path}:{lineno}\t{rule.name}
+        Description: {rule.description}
+        Example:
+        {rule.example}
+        Instead:
+        {rule.instead}
+        """)
+    else:
+        failure_message = "{path}:{lineno}\t{rule.name}: {rule.description}"
 
-    print(success("Linting succeeded ({} rule{}).".format(
+    num_files = 0
+    failures = 0
+    files = walk_python_files(os.path.abspath(project_directory))
+    for filepath, file_contents in files:
+        relpath = os.path.relpath(filepath, project_directory)
+        linting_results = list(lint_file(filepath, file_contents, rules))
+        if not linting_results:
+            continue
+        num_files += 1
+        failure_results = (
+            result
+            for result in linting_results
+            if not result.succeeded
+        )
+        for failure in failure_results:
+            failures += 1
+            print(failure_message.format(
+                path=relpath,
+                lineno=failure.lineno,
+                rule=failure.rule,
+            ))
+
+    final_message = "Linting {} ({} rule{}, {} file{}, {} violation{}).".format(
+        'failed' if failures else 'succeeded',
         len(rules),
-        '' if len(rules) == 1 else 's'
-    )))
-    return 0
+        '' if len(rules) == 1 else 's',
+        num_files,
+        '' if num_files == 1 else 's',
+        failures,
+        '' if failures == 1 else 's',
+    )
+    print((error if failures else success)(final_message))
+    return 1 if failures else 0
 
 
 def main():

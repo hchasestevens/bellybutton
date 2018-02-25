@@ -7,7 +7,8 @@ INIT_TEMPLATE = '''settings:
   all_files: &all_files !settings
     included:
       - ~+/*
-    excluded: []
+    excluded:
+      - ~+/.tox/*
     allow_ignore: yes
 {test_block}
 default_settings: *{default_settings}
@@ -25,7 +26,8 @@ TESTS_SETTINGS_TEMPLATE = """
   tests_only: &tests_only !settings
     included:
       {test_dirs}
-    excluded: []
+    excluded: 
+      - ~+/.tox/*
     allow_ignore: yes
 
   excluding_tests: &excluding_tests !settings
@@ -33,6 +35,7 @@ TESTS_SETTINGS_TEMPLATE = """
       - ~+/*
     excluded:
       {test_dirs}
+      - ~+/.tox/*
     allow_ignore: yes
 """
 

@@ -4,9 +4,12 @@ import re
 import fnmatch
 import tokenize
 from collections import namedtuple
+from operator import attrgetter
 
+from astpath import find_in_ast, file_contents_to_xml_ast
+from lxml.etree import XPath
 
-Failure = namedtuple('Failure', 'rule filepath lineno')
+LintingResult = namedtuple('LintingResult', 'rule filepath succeeded lineno')
 
 
 def get_ignored_lines(file_contents):
@@ -36,15 +39,41 @@ def rule_settings_match(rule, filepath):
 
 def lint_file(filepath, file_contents, rules):
     """Run rules against file, yielding any failures."""
-    ignored_lines = get_ignored_lines(file_contents)
-    matching_rules = (
+    matching_rules = [
         rule
         for rule in rules
         if rule_settings_match(rule, filepath)
-    )
-    for rule in matching_rules:
-        # see if matches
-        # if matches, see if rule is ignorable
-        # if ignorable, see if line is ignored
-        # otherwise, yield failure
-        pass
+    ]
+    if not matching_rules:
+        return
+
+    ignored_lines = get_ignored_lines(file_contents)
+    xml_ast = file_contents_to_xml_ast(file_contents)  # todo - use caching module?
+
+    for rule in sorted(matching_rules, key=attrgetter('name')):
+        # TODO - hacky - need to find better way to do this (while keeping chain)
+        # TODO - possibly having both filepath and contents/input supplied?
+        if isinstance(rule.expr, XPath):
+            matching_lines = set(find_in_ast(
+                xml_ast,
+                rule.expr.path,
+                return_lines=True
+            ))
+        elif isinstance(rule.expr, re._pattern_type):
+            matching_lines = {
+                file_contents[:match.start()].count('\n') + 1  # TODO - slow
+                for match in re.finditer(rule.expr)
+            }
+        elif callable(rule.expr):
+            matching_lines = set(rule.expr(file_contents))
+        else:
+            continue  # todo - maybe throw here?
+
+        if rule.settings.allow_ignore:
+            matching_lines -= ignored_lines
+
+        if not matching_lines:
+            yield LintingResult(rule, filepath, succeeded=True, lineno=None)
+
+        for line in matching_lines:
+            yield LintingResult(rule, filepath, succeeded=False, lineno=line)

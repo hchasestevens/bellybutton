@@ -37,6 +37,8 @@ def glob(loader, node):
     )
 
 
+# todo - all exprs return tuple(parsed_expr, contents -> {lines})?
+
 @constructor(pattern=r'/.+')
 def xpath(loader, node):
     """Construct XPath expressions."""
@@ -48,7 +50,7 @@ def xpath(loader, node):
 def regex(loader, node):
     """Construct regular expressions."""
     value = loader.construct_scalar(node)
-    return re.compile(value)
+    return re.compile(value, re.MULTILINE)
 
 
 @constructor
@@ -125,6 +127,8 @@ def parse_rule(rule_name, rule_values, default_settings=None):
     rule_settings = rule_values.get('settings', default_settings)
     if rule_settings is None:
         raise InvalidNode("No rule settings or default settings specified.")
+    if not isinstance(rule_settings, Settings):
+        raise InvalidNode("Rule settings must be a !settings node.")
 
     return Rule(
         name=rule_name,
@@ -145,5 +149,4 @@ def load_config(fileobj):
         for rule_name, rule_values in
         loaded.get('rules', {}).items()
     ]
-    print(rules)
     return rules

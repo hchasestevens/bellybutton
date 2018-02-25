@@ -13,6 +13,7 @@ setup(
     install_requires=[
         'astpath[xpath]>=0.6.1',
         'pyyaml>=3.12',
+        'lxml>=4.1.1',
     ],
     tests_require=['pytest>=3.1.2', 'future>=0.16.0'],
     extras_require={'dev': ['pytest>=3.1.2', 'future>=0.16.0']},

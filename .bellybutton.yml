@@ -1,27 +1,31 @@
 settings:
   all_files: &all_files !settings
     included:
-      - ~+/*
-    excluded: []
+      - ~+/bellybutton/*
+    excluded:
+      - ~+/.tox/*
     allow_ignore: yes
 
   tests_only: &tests_only !settings
     included:
       - ~+/tests/*
-    excluded: []
+    excluded:
+      - ~+/.tox/*
     allow_ignore: yes
 
   excluding_tests: &excluding_tests !settings
     included:
-      - ~+/*
+      - ~+/bellybutton/*
     excluded:
       - ~+/tests/*
+      - ~+/.tox/*
     allow_ignore: yes
 
   excluding_cli: &excluding_cli !settings
     <<: *excluding_tests
     excluded:
       - ~+/tests/*
+      - ~+/.tox/*
       - ~+/bellybutton/cli.py
 
 default_settings: *excluding_tests
