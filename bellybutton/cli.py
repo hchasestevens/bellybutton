@@ -122,13 +122,16 @@ def lint(modified_only=False, project_directory='.', verbose=False):
         return 1
 
     if verbose:
-        failure_message = dedent("""{path}:{lineno}\t{rule.name}
-        Description: {rule.description}
-        Example:
+        failure_message = dedent("""
+        \033[95m{path}:{lineno}\033[0m\t\033[1;95;4m{rule.name}\033[0m
+        \033[1mDescription\033[0m: {rule.description}
+        \033[1mLine\033[0m:
+        {line}
+        \033[1mExample\033[0m:
         {rule.example}
-        Instead:
+        \033[1mInstead\033[0m:
         {rule.instead}
-        """)
+        """).lstrip()
     else:
         failure_message = "{path}:{lineno}\t{rule.name}: {rule.description}"
 
@@ -151,6 +154,7 @@ def lint(modified_only=False, project_directory='.', verbose=False):
             print(failure_message.format(
                 path=relpath,
                 lineno=failure.lineno,
+                line=file_contents.splitlines()[failure.lineno - 1],
                 rule=failure.rule,
             ))
 
