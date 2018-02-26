@@ -88,7 +88,7 @@ Additionally, at the root level of `.bellybutton.yml`, a `default_settings` sett
 will be used by rules without explicit settings. Each rule must either have a `settings` parameter or be
 able to fall back on the `default_settings`.
 
-## Example usage:
+## Example usage
 
 Check out this repository's [`.bellybutton.yml`](.bellybutton.yml) as an example `bellybutton` configuration file, 
 and [`astpath`'s README](https://github.com/hchasestevens/astpath/blob/master/README.md) for examples of the types 
