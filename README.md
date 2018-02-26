@@ -73,7 +73,7 @@ ignored via a `# bb: ignore` comment
 * A counter-example `instead` of an alternative piece of code, for guiding the developer in fixing their
 linting error.
 
-These `example` and `instead` clauses are checked at run-time to ensure that they respectively are and are
+These `example` and `instead` clauses are checked at run-time to ensure that they respectively are and are not
 matched by the rule's `expr`.
 
 ### Settings
