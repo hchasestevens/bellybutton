@@ -47,7 +47,7 @@ bellybutton lint
 ```
 will lint the project against the rules specified in your `.bellybutton.yml`. Additionally, running
 ```bash
-bellybutton lint --modified-only
+bellybutton lint --modified_only
 ```
 will, if using git, only lint those files that differ from `origin/master`.
 
@@ -101,7 +101,6 @@ and full test coverage. Further, `bellybutton` is not optimized for performance 
 codebases and may contain breaking bugs. Please report any bugs encountered.
 
 ### Known issues:
-* The `--modified-only` flag of `bellybutton lint` is not yet implemented
 * The `!chain` and `!verbal` expression nodes are not yet implemented
 * Errors in `expr` syntax are not yet caught
 * Errors in rule specification are not yet localized to the relevant `.bellybutton.yml` line

@@ -5,6 +5,7 @@ from __future__ import print_function
 import os
 import sys
 import argparse
+import subprocess
 from textwrap import dedent
 
 from bellybutton.exceptions import InvalidNode
@@ -87,20 +88,37 @@ def init(project_directory='.', force=False):
 
 
 def walk_python_files(root_dir):
-    """
-    Walk the specified directory, yielding (path, content) pairs for python
-    source files.
-    """
-    filepaths = (
+    """Walk the specified directory, yielding paths for python source files."""
+    return (
         os.path.join(root, fname)
         for root, _, fnames in os.walk(root_dir)
         for fname in fnames
         if os.path.splitext(fname)[-1] == '.py'
     )
+
+
+def open_python_files(filepaths):
+    """For each specified filepath, yield (path, content) pairs."""
     for filepath in sorted(filepaths):
         with open(filepath, 'r') as f:
             contents = f.read()
         yield filepath, contents
+
+
+def get_git_modified(project_directory):
+    """Get all modified filepaths between current ref and origin/master."""
+    subprocess.check_call(
+        'git -C "{}" fetch origin'.format(project_directory),
+        shell=True
+    )
+    diff_cmd = 'git -C "{}" diff {{}} --name-only'.format(os.path.abspath(project_directory))
+    return frozenset(
+        os.path.abspath(path)
+        for diff in ('', '--staged', 'origin/master...')
+        for path in subprocess.check_output(
+            diff_cmd.format(diff)
+        ).decode('utf-8').strip().splitlines()
+    )
 
 
 @cli_command
@@ -137,7 +155,10 @@ def lint(modified_only=False, project_directory='.', verbose=False):
 
     num_files = 0
     failures = 0
-    files = walk_python_files(os.path.abspath(project_directory))
+    filepath_source = get_git_modified if modified_only else walk_python_files
+    files = open_python_files(
+        filepath_source(os.path.abspath(project_directory))
+    )
     for filepath, file_contents in files:
         relpath = os.path.relpath(filepath, project_directory)
         linting_results = list(lint_file(filepath, file_contents, rules))
