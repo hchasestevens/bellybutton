@@ -76,6 +76,15 @@ linting error.
 These `example` and `instead` clauses are checked at run-time to ensure that they respectively are and are not
 matched by the rule's `expr`.
 
+As an example, a rule to lint for a deprecated function call using an [astpath](https://github.com/hchasestevens/astpath) expression might look like:
+```yaml
+DeprecatedFnCall:
+  description: `deprecated_fn` will be deprecated in v9.1.2. Please use `new_fn` instead.
+  expr: //Call[func/Name/@id='deprecated_fn']
+  example: "deprecated_fn(*values)"
+  instead: "new_fn(values)"
+```
+
 ### Settings
 
 `!settings` nodes specify:
@@ -87,6 +96,15 @@ rule has a `# bb: ignore` comment.
 Additionally, at the root level of `.bellybutton.yml`, a `default_settings` setting may be specified which
 will be used by rules without explicit settings. Each rule must either have a `settings` parameter or be
 able to fall back on the `default_settings`.
+
+As an example, a `!settings` node to lint only a specific module might look like:
+```yaml
+my_module_settings: !settings
+  included:
+    - ~+/my_package/my_module.py
+  excluded: []
+  allow_ignore: no
+```
 
 ## Example usage
 
