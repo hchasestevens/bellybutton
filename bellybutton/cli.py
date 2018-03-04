@@ -44,6 +44,7 @@ def cli_command(fn):
         fillvalue=unspecified
     )))
     for argument_name, default_value in args:
+        argument_name = argument_name.replace('_', '-')
         if default_value is unspecified:
             command.add_argument(argument_name)
             continue
