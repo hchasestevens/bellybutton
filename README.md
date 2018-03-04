@@ -20,7 +20,7 @@ your normal build, test and deployment process and, further, makes specifying th
 accessible, greatly lowering the cost of adoption.
 
 Give `bellybutton` a try if:
-* You find yourself often making the same PR comments
+* You find yourself making the same PR comments over and over again
 * You need a means of gradually deprecating legacy functionality
 * You're looking to build a self-enforcing style guide
 * Your project needs to onboard new or junior developers more quickly and effectively
