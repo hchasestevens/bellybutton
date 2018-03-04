@@ -10,8 +10,8 @@ from bellybutton import cli
     cli.lint,
 ))
 @pytest.mark.parametrize('options', (
-    ' --project_directory .',
-    ' --project_directory=.',
+    ' --project-directory .',
+    ' --project-directory=.',
     '',
 ))
 def test_interface_exposes_subcommands(fn, options):

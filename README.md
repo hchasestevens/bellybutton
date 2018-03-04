@@ -47,7 +47,7 @@ bellybutton lint
 ```
 will lint the project against the rules specified in your `.bellybutton.yml`. Additionally, running
 ```bash
-bellybutton lint --modified_only
+bellybutton lint --modified-only
 ```
 will, if using git, only lint those files that differ from `origin/master`.
 

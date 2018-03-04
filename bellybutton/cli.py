@@ -44,6 +44,7 @@ def cli_command(fn):
         fillvalue=unspecified
     )))
     for argument_name, default_value in args:
+        argument_name = argument_name.replace('_', '-')
         if default_value is unspecified:
             command.add_argument(argument_name)
             continue
@@ -114,9 +115,10 @@ def get_git_modified(project_directory):
     diff_cmd = 'git -C "{}" diff {{}} --name-only'.format(os.path.abspath(project_directory))
     return frozenset(
         os.path.abspath(path)
-        for diff in ('', '--staged', 'origin/master...')
+        for diff in ('--staged', 'origin/master...')
         for path in subprocess.check_output(
-            diff_cmd.format(diff)
+            diff_cmd.format(diff),
+            shell=True
         ).decode('utf-8').strip().splitlines()
     )
 
