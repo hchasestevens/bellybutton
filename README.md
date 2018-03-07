@@ -62,7 +62,7 @@ Rules in `bellybutton` supply patterns that should be caught and cause linting t
 in your `.bellybutton.yml` configuration must consist of:
 * A description `description`, expressing the meaning of the rule
 * An expression `expr`, specifying the pattern to be caught - either as an 
-[astpath](https://github.com/hchasestevens/astpath) expression or as a regular expression.
+[astpath](https://github.com/hchasestevens/astpath) expression or as a regular expression (`!regex ...`).
 
 Additionally, the key used for the rule within the `rules` mapping serves as its name.
 
