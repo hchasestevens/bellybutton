@@ -1,6 +1,7 @@
 """YAML parsing."""
-import ast
 import re
+import ast
+import functools
 from collections import namedtuple
 
 import os
@@ -27,7 +28,21 @@ def constructor(tag=None, pattern=None):
     return decorator
 
 
+def _reraise_with_line_no(fn):
+    @functools.wraps(fn)
+    def wrapper(loader, node):
+        try:
+            return fn(loader, node)
+        except Exception as e:
+            msg = getattr(e, 'message', str(e))
+            raise InvalidNode(
+                "line {}: {}.".format(node.start_mark.line + 1, msg)
+            )
+    return wrapper
+
+
 @constructor(pattern=r'\~\+[/\\].+')
+@_reraise_with_line_no
 def glob(loader, node):
     """Construct glob expressions."""
     value = loader.construct_scalar(node)[len('~+/'):]
@@ -37,9 +52,10 @@ def glob(loader, node):
     )
 
 
-# todo - all exprs return tuple(parsed_expr, contents -> {lines})?
+# todo - all exprs return (parsed_expr, contents -> {lines})?
 
 @constructor(pattern=r'/.+')
+@_reraise_with_line_no
 def xpath(loader, node):
     """Construct XPath expressions."""
     value = loader.construct_scalar(node)
@@ -47,6 +63,7 @@ def xpath(loader, node):
 
 
 @constructor
+@_reraise_with_line_no
 def regex(loader, node):
     """Construct regular expressions."""
     value = loader.construct_scalar(node)
@@ -54,6 +71,7 @@ def regex(loader, node):
 
 
 @constructor
+@_reraise_with_line_no
 def verbal(loader, node):
     """Construct verbal expressions."""
     values = loader.construct_sequence(node)
@@ -61,6 +79,7 @@ def verbal(loader, node):
 
 
 @constructor
+@_reraise_with_line_no
 def chain(loader, node):
     """Construct pipelines of other constructors."""
     values = loader.construct_sequence(node)
@@ -87,21 +106,33 @@ def settings(loader, node):
 Rule = namedtuple('Rule', 'name description expr example instead settings')
 
 
-def validate_syntax(rule_example):
+def validate_syntax(rule_clause, clause_type):
     try:
-        ast.parse(rule_example)
+        ast.parse(rule_clause)
     except SyntaxError as e:
-        raise InvalidNode("Invalid syntax in rule example.")
+        raise InvalidNode("Invalid syntax in `{}` clause.".format(clause_type))
 
 
+def _reraise_with_rule_name(fn):
+    @functools.wraps(fn)
+    def wrapper(rule_name, *args, **kwargs):
+        try:
+            return fn(rule_name, *args, **kwargs)
+        except Exception as e:
+            msg = getattr(e, 'message', str(e))
+            raise InvalidNode("rule `{}`: {}".format(rule_name, msg))
+    return wrapper
+
+
+@_reraise_with_rule_name
 def parse_rule(rule_name, rule_values, default_settings=None):
     rule_description = rule_values.get('description')
     if rule_description is None:
-        raise InvalidNode("No rule description provided.")
+        raise InvalidNode("No description provided.")
 
     rule_expr = rule_values.get('expr')
     if rule_expr is None:
-        raise InvalidNode("No rule expression provided.")
+        raise InvalidNode("No expression provided.".format(rule_name))
     matches = (
         lambda x: find_in_ast(
             file_contents_to_xml_ast(x),
@@ -114,21 +145,21 @@ def parse_rule(rule_name, rule_values, default_settings=None):
 
     rule_example = rule_values.get('example')
     if rule_example is not None:
-        validate_syntax(rule_example)
+        validate_syntax(rule_example, clause_type='example')
         if not matches(rule_example):
-            raise InvalidNode("Rule `example` clause is not matched by rule.")
+            raise InvalidNode("`example` clause is not matched by expression.")
 
     rule_instead = rule_values.get('instead')
     if rule_instead is not None:
-        validate_syntax(rule_instead)
+        validate_syntax(rule_instead, clause_type='instead')
         if matches(rule_instead):
-            raise InvalidNode("Rule `instead` clause is matched by rule.")
+            raise InvalidNode("`instead` clause is matched by expression.")
 
     rule_settings = rule_values.get('settings', default_settings)
     if rule_settings is None:
-        raise InvalidNode("No rule settings or default settings specified.")
+        raise InvalidNode("No settings or default settings specified.")
     if not isinstance(rule_settings, Settings):
-        raise InvalidNode("Rule settings must be a !settings node.")
+        raise InvalidNode("Settings must be a !settings node.")
 
     return Rule(
         name=rule_name,
