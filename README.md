@@ -120,9 +120,6 @@ codebases and may contain breaking bugs. Please report any bugs encountered.
 
 ### Known issues:
 * The `!chain` and `!verbal` expression nodes are not yet implemented
-* Errors in `expr` syntax are not yet caught
-* Errors in rule specification are not yet localized to the relevant `.bellybutton.yml` line
-
 
 ## Contacts
 

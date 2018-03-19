@@ -137,8 +137,9 @@ def lint(modified_only=False, project_directory='.', verbose=False):
         print(error(message.format(config_path)))
         return 1
     except InvalidNode as e:
-        message = "ERROR: When parsing {}: {!r}"
-        print(error(message.format(config_path, e)))
+        message = "ERROR: {}, {}"
+        exc_message = getattr(e, 'message', str(e))
+        print(error(message.format(config_path, exc_message)))
         return 1
 
     if verbose:
