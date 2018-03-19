@@ -14,9 +14,9 @@ from bellybutton.parsing import Settings, parse_rule, Rule
 @pytest.mark.parametrize('expression,expected_type', (
     ('!xpath //*', XPath),
     ('//*', XPath),
-    pytest.mark.xfail(('//[]', XPath), raises=XPathSyntaxError),
+    pytest.mark.xfail(('//[]', XPath), raises=InvalidNode),
     ('!regex .*', re._pattern_type),
-    pytest.mark.xfail(('!regex "*"', re._pattern_type), raises=re.error),
+    pytest.mark.xfail(('!regex "*"', re._pattern_type), raises=InvalidNode),
     ('!settings {included: [], excluded: [], allow_ignore: yes}', Settings),
     pytest.mark.xfail(('!settings {}', Settings), raises=InvalidNode)
 ))
