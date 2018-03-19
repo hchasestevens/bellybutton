@@ -120,7 +120,6 @@ codebases and may contain breaking bugs. Please report any bugs encountered.
 
 ### Known issues:
 * The `!chain` and `!verbal` expression nodes are not yet implemented
-* Errors in `expr` syntax are not yet caught
 
 ## Contacts
 
