@@ -1,6 +1,6 @@
 # bellybutton
 
-[![Build Status](https://travis-ci.org/hchasestevens/bellybutton.svg?branch=master)](https://travis-ci.org/hchasestevens/bellybutton) [![PyPI version](https://badge.fury.io/py/bellybutton.svg)](https://badge.fury.io/py/bellybutton) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/bellybutton.svg) [![Liberapay receiving](https://img.shields.io/liberapay/receives/hchasestevens.svg)](https://liberapay.com/hchasestevens/)
+[![Build Status](https://travis-ci.org/hchasestevens/bellybutton.svg?branch=master)](https://travis-ci.org/hchasestevens/bellybutton) [![PyPI version](https://badge.fury.io/py/bellybutton.svg)](https://badge.fury.io/py/bellybutton) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/bellybutton.svg)
 
 <img src="demo.gif" width="642">
 
