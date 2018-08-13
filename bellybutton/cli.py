@@ -175,10 +175,11 @@ def lint(modified_only=False, project_directory='.', verbose=False):
         )
         for failure in failure_results:
             failures += 1
+            lines = file_contents.splitlines()
             print(failure_message.format(
                 path=relpath,
                 lineno=failure.lineno,
-                line=file_contents.splitlines()[failure.lineno - 1],
+                line=lines[min(failure.lineno, len(lines)) - 1] if lines else '',
                 rule=failure.rule,
             ))
 

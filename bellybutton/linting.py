@@ -62,7 +62,7 @@ def lint_file(filepath, file_contents, rules):
         elif isinstance(rule.expr, re._pattern_type):
             matching_lines = {
                 file_contents[:match.start()].count('\n') + 1  # TODO - slow
-                for match in re.finditer(rule.expr)
+                for match in re.finditer(rule.expr, file_contents)
             }
         elif callable(rule.expr):
             matching_lines = set(rule.expr(file_contents))
