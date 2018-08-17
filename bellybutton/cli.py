@@ -6,6 +6,7 @@ import os
 import sys
 import argparse
 import subprocess
+from collections import namedtuple
 from textwrap import dedent
 
 from bellybutton.exceptions import InvalidNode
@@ -22,6 +23,9 @@ from bellybutton.initialization import generate_config
 
 PARSER = argparse.ArgumentParser()
 SUBPARSERS = PARSER.add_subparsers()
+
+
+LintingFailure = namedtuple('LintingFailure', 'failure path lineno line rule')
 
 
 def success(msg):
@@ -123,6 +127,31 @@ def get_git_modified(project_directory):
     )
 
 
+def linting_failures(filepaths, rules):
+    """Given a set of filepaths and a set of rules, yield all rule violations."""
+    failures = 0
+    files = open_python_files(filepaths)
+    for filepath, file_contents in files:
+        linting_results = list(lint_file(filepath, file_contents, rules))
+        if not linting_results:
+            continue
+        failure_results = (
+            result
+            for result in linting_results
+            if not result.succeeded
+        )
+        for failure in failure_results:
+            failures += 1
+            lines = file_contents.splitlines()
+            yield LintingFailure(
+                failure=failure,
+                path=filepath,
+                lineno=failure.lineno,
+                line=lines[min(failure.lineno, len(lines)) - 1] if lines else '',
+                rule=failure.rule,
+            )
+
+
 @cli_command
 def lint(modified_only=False, project_directory='.', verbose=False):
     """Lint project."""
@@ -156,39 +185,24 @@ def lint(modified_only=False, project_directory='.', verbose=False):
     else:
         failure_message = "{path}:{lineno}\t{rule.name}: {rule.description}"
 
-    num_files = 0
     failures = 0
     filepath_source = get_git_modified if modified_only else walk_python_files
-    files = open_python_files(
-        filepath_source(os.path.abspath(project_directory))
-    )
-    for filepath, file_contents in files:
-        relpath = os.path.relpath(filepath, project_directory)
-        linting_results = list(lint_file(filepath, file_contents, rules))
-        if not linting_results:
-            continue
-        num_files += 1
-        failure_results = (
-            result
-            for result in linting_results
-            if not result.succeeded
-        )
-        for failure in failure_results:
-            failures += 1
-            lines = file_contents.splitlines()
-            print(failure_message.format(
-                path=relpath,
-                lineno=failure.lineno,
-                line=lines[min(failure.lineno, len(lines)) - 1] if lines else '',
-                rule=failure.rule,
-            ))
+    filepaths = list(filepath_source(os.path.abspath(project_directory)))
+    for failure in linting_failures(filepaths, rules):
+        failures += 1
+        print(failure_message.format(
+            path=os.path.relpath(failure.path, project_directory),
+            lineno=failure.lineno,
+            line=failure.line,
+            rule=failure.rule
+        ))
 
     final_message = "Linting {} ({} rule{}, {} file{}, {} violation{}).".format(
         'failed' if failures else 'succeeded',
         len(rules),
         '' if len(rules) == 1 else 's',
-        num_files,
-        '' if num_files == 1 else 's',
+        len(filepaths),
+        '' if len(filepaths) == 1 else 's',
         failures,
         '' if failures == 1 else 's',
     )
