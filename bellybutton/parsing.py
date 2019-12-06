@@ -173,7 +173,7 @@ def parse_rule(rule_name, rule_values, default_settings=None):
 
 def load_config(fileobj):
     """Load bellybutton config file, returning a list of rules."""
-    loaded = yaml.load(fileobj)
+    loaded = yaml.load(fileobj, Loader = yaml.FullLoader)
     default_settings = loaded.get('default_settings')
     rules = [
         parse_rule(rule_name, rule_values, default_settings)
