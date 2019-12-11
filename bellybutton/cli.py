@@ -124,6 +124,7 @@ def get_git_modified(project_directory):
             diff_cmd.format(diff),
             shell=True
         ).decode('utf-8').strip().splitlines()
+        if os.path.splitext(path)[-1] == '.py'
     )
 
 
