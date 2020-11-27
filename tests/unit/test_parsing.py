@@ -10,13 +10,17 @@ from lxml.etree import XPath, XPathSyntaxError
 from bellybutton.exceptions import InvalidNode
 from bellybutton.parsing import Settings, parse_rule, Rule
 
+try:
+    from re import Pattern as pattern_type
+except ImportError:
+    from re import _pattern_type as pattern_type
 
 @pytest.mark.parametrize('expression,expected_type', (
     ('!xpath //*', XPath),
     ('//*', XPath),
     pytest.mark.xfail(('//[]', XPath), raises=InvalidNode),
-    ('!regex .*', re._pattern_type),
-    pytest.mark.xfail(('!regex "*"', re._pattern_type), raises=InvalidNode),
+    ('!regex .*', pattern_type),
+    pytest.mark.xfail(('!regex "*"', pattern_type), raises=InvalidNode),
     ('!settings {included: [], excluded: [], allow_ignore: yes}', Settings),
     pytest.mark.xfail(('!settings {}', Settings), raises=InvalidNode)
 ))

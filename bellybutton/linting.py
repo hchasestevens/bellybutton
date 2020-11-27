@@ -9,6 +9,11 @@ from operator import attrgetter
 from astpath import find_in_ast, file_contents_to_xml_ast
 from lxml.etree import XPath
 
+try:
+    from re import Pattern as pattern_type
+except ImportError:
+    from re import _pattern_type as pattern_type
+
 LintingResult = namedtuple('LintingResult', 'rule filepath succeeded lineno')
 
 
@@ -59,7 +64,7 @@ def lint_file(filepath, file_contents, rules):
                 rule.expr.path,
                 return_lines=True
             ))
-        elif isinstance(rule.expr, re._pattern_type):
+        elif isinstance(rule.expr, pattern_type):
             matching_lines = {
                 file_contents[:match.start()].count('\n') + 1  # TODO - slow
                 for match in re.finditer(rule.expr, file_contents)
