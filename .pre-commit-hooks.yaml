@@ -1,0 +1,8 @@
+- id: bellybutton
+  name: bellybutton
+  description: 'bellybutton is a customizable, easy-to-configure linting engine for Python.'
+  entry: bellybutton lint
+  pass_filenames: False
+  language: python
+  types: [python]
+
