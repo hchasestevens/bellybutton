@@ -111,19 +111,21 @@ def open_python_files(filepaths):
 
 
 def get_git_modified(project_directory):
-    """Get all modified filepaths between current ref and origin/master."""
-    subprocess.check_call(
-        'git -C "{}" fetch origin'.format(project_directory),
-        shell=True
-    )
-    diff_cmd = 'git -C "{}" diff {{}} --name-only'.format(os.path.abspath(project_directory))
+    """Get all modified filepaths between current ref and default branch."""
+    # guess default branch based on the HEAD branch of 'origin' remote
+    default_branch = subprocess.run(
+        ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
+        check=True, encoding="utf-8", stdout=subprocess.PIPE,
+    ).stdout.strip().split("/")[-1]
+
+    # return files modified in staging area or compared to default branch
     return frozenset(
         os.path.abspath(path)
-        for diff in ('--staged', 'origin/master...')
-        for path in subprocess.check_output(
-            diff_cmd.format(diff),
-            shell=True
-        ).decode('utf-8').strip().splitlines()
+        for diff in ('--staged', f"{default_branch}...")
+        for path in subprocess.run(
+            ["git", "-C", project_directory, "diff", diff, "--name-only"],
+            check=True, encoding="utf-8", stdout=subprocess.PIPE,
+        ).stdout.strip().splitlines()
         if os.path.splitext(path)[-1] == '.py'
     )
 
