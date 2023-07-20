@@ -12,7 +12,7 @@ setup(
     license='MIT',
     install_requires=[
         'astpath[xpath]==0.6.1',
-        'pyyaml>=4.0,<6.0',
+        'pyyaml>=4.0,<7.0',
         'lxml>=4.1.1',
     ],
     tests_require=['pytest>=3.1.2', 'future>=0.16.0'],
