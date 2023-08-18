@@ -42,7 +42,7 @@ def rule_settings_match(rule, filepath):
     return should_be_included and not should_be_excluded
 
 
-def lint_file(filepath, file_contents, rules):
+def lint_file(filepath, file_manager, rules):
     """Run rules against file, yielding any failures."""
     matching_rules = [
         rule
@@ -52,6 +52,7 @@ def lint_file(filepath, file_contents, rules):
     if not matching_rules:
         return
 
+    file_contents = file_manager.get(filepath)
     ignored_lines = get_ignored_lines(file_contents)
     xml_ast = file_contents_to_xml_ast(file_contents)  # todo - use caching module?
 

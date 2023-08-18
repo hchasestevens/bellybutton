@@ -27,6 +27,13 @@ settings:
       - ~+/tests/*
       - ~+/.tox/*
       - ~+/bellybutton/cli.py
+  excluding_cli_caching: &excluding_cli_caching !settings
+    <<: *excluding_tests
+    excluded:
+      - ~+/tests/*
+      - ~+/.tox/*
+      - ~+/bellybutton/cli.py
+      - ~+/bellybutton/caching.py
 
 default_settings: *excluding_tests
 
@@ -39,9 +46,9 @@ rules:
     settings: *excluding_cli
 
   IllicitOpen:
-    description: Performing I/O outside the CLI module is disallowed.
+    description: Performing I/O outside the CLI or cache module is disallowed.
     expr: //Call[func/Name/@id='open']
     example: |
       with open('x') as f:
         pass
-    settings: *excluding_cli
+    settings: *excluding_cli_caching

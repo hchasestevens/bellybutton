@@ -9,6 +9,7 @@ import subprocess
 from collections import namedtuple
 from textwrap import dedent
 
+from bellybutton.caching import FileManager
 from bellybutton.exceptions import InvalidNode
 from bellybutton.linting import lint_file
 from bellybutton.parsing import load_config
@@ -131,9 +132,11 @@ def get_git_modified(project_directory):
 def linting_failures(filepaths, rules):
     """Given a set of filepaths and a set of rules, yield all rule violations."""
     failures = 0
-    files = open_python_files(filepaths)
-    for filepath, file_contents in files:
-        linting_results = list(lint_file(filepath, file_contents, rules))
+
+    file_manager = FileManager()
+
+    for filepath in filepaths:
+        linting_results = list(lint_file(filepath, file_manager, rules))
         if not linting_results:
             continue
         failure_results = (
@@ -141,6 +144,7 @@ def linting_failures(filepaths, rules):
             for result in linting_results
             if not result.succeeded
         )
+        file_contents = file_manager.get(filepath)
         for failure in failure_results:
             failures += 1
             lines = file_contents.splitlines()
